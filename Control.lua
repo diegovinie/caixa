@@ -1,4 +1,4 @@
-Class = require 'hump/Class'
+Class = require 'hump.class'
 
 local keyMap = {
     up = { kb = 'up', gp = 'dpup' },
