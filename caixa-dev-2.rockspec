@@ -1,15 +1,17 @@
 package = "caixa"
-version = "dev-1"
+version = "dev-2"
 source = {
    url = "git+ssh://git@github.com/diegovinie/caixa.git"
 }
 description = {
-   summary = "```luarocks make --local",
+   summary = "A tool box for love2d",
    detailed = [[
-
-```
-luarocks make --local]],
-   homepage = "*** please enter a project homepage ***",
+      # Caixa
+      A tool box for love2d
+      ## Input
+      Input is an abstraction for input controls that allows you to use keyboard or gamepad with the same code.
+   ]],
+   homepage = "https://github.com/diegovinie/caixa",
    license = "*** please specify a license ***"
 }
 dependencies = {
