@@ -1,6 +1,5 @@
-Control = require 'Control'
-
-local presets = require 'presets'
+Control = require 'Input.Control'
+local presets = require 'Input.presets'
 
 local love = {
     joystick = {
