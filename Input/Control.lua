@@ -1,5 +1,5 @@
 Class = require 'hump.class'
-local presets = require 'love2dControl.presets'
+local presets = require 'caixa.Input.presets'
 
 ---This the global state, used with static methods
 local state = {
