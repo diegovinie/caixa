@@ -1,5 +1,10 @@
 Class = require 'hump.class'
 local presets = require 'caixa.Input.presets'
+local engine;
+
+if love then
+    engine = love
+end
 
 ---This the global state, used with static methods
 local state = {
@@ -14,19 +19,23 @@ local Control = Class{}
 ---@param def table
 ---
 function Control:init(def)
+    if engine == nil then
+        error('No engine detected')
+    end
+
     self.position = def.position or 1
-    self.up = false
-    self.right = false
-    self.down = false
-    self.left = false
-    self.buttonA = false
-    self.buttonB = false
     local kbSet = def.kbSet or presets.kb1
     local gpSet = def.gpSet or presets.gp1
-    self.engine = def.engine
     self.player = def.player
 
-    local joysticks = self.engine.joystick.getJoysticks()
+    self.buttons = {
+        up = false,
+        right = false,
+        down = false,
+        left = false,
+        buttonA = false,
+        buttonB = false,
+    }
 
     state.joysticks = engine.joystick.getJoysticks()
 
@@ -57,9 +66,9 @@ end
 
 function Control:updateInput(key)
     if self:keyboardDown(key) or self:gamepadDown(key) then
-        self[key] = true
+        self.buttons[key] = true
     else
-        self[key] = false
+        self.buttons[key] = false
     end
 end
 
@@ -97,7 +106,7 @@ end
 function Control:keyboardDown(button)
     local key = self.inputMap[button].kb
 
-    return key and self.engine.keyboard.isDown(key)
+    return key and engine.keyboard.isDown(key)
 end
 
 ---Check if any gamepad button pressed math any input
@@ -115,26 +124,32 @@ end
 
 ---------------------------- Static methods --------------------------------
 
+---(static) Perform all controls' update function at once.
+---Use it at the top of the main update function.
+---
+---@param dt number delta time in second fractions
+---
 function Control.UpdateAll(dt)
     for _, control in pairs(state.controls) do
         control:update(dt)
     end
 end
 
----Try to get all joysticks from the engine and assign them to the respective players
+---(static) Try to get all joysticks from the engine and assign them to the
+---respective registered players
 ---
 ---Used when browsers starts the game before registering the joysticks.
 ---
 function Control.RegisterJoysticks()
     print 'Registering joysticks'
-    state.joysticks = self.engine.joystick.getJoysticks()
+    state.joysticks = engine.joystick.getJoysticks()
 
     for _, control in pairs(state.controls) do
         control.joystick = state.joysticks[control.position]
     end
 end
 
----Create a InputMap
+---(static) Create a InputMap
 ---@generic InputMap : table
 ---@generic Preset : table
 ---@param kbSet Preset keyboard preset
@@ -165,6 +180,11 @@ function Control.RemoveControl(player)
     state.controls[player] = nil
 end
 
+---(static) Returns a control instance associated to a string
+---@generic Control
+---@param player string the player who instantiated the control
+---@return Control|nil
+---
 function Control.GetControl(player)
     for key, control in pairs(state.controls) do
         if not player then
@@ -175,18 +195,19 @@ function Control.GetControl(player)
             return control
         end
     end
+
+    return nil
 end
 
----Use this with gamepadpressed
+---(static) Use this with gamepadpressed
 ---@generic Button : string
 ---@param button Button
 ---@param position number this is the joystick number
 ---
-function Control.RegisterGamepad(button, position)
-    -- print(position)
+function Control.OnGamepadPressed(button, position)
     local gp = state.inputPressed.gp
     gp[position] = gp[position] or {}
-    -- print_r(gp)
+
     gp[position][button] = true
 
     if #state.joysticks == 0 then
@@ -194,21 +215,32 @@ function Control.RegisterGamepad(button, position)
     end
 end
 
----Use this with keypressed
+---(static) Use this with keypressed
 ---@param key string
 ---
-function Control.RegisterKeyboard(key)
+function Control.OnKeyboardPressed(key)
     state.inputPressed.kb[key] = true
 end
 
 function Control.Pressed(button, player)
     local control = Control.GetControl(player)
 
+    if control == nil then
+        return error('No control found for ' .. player)
+    end
+
     return control:pressed(button)
 end
 
+---(static) Clean the tables for recording pressed buttons.
+---Use it at the end of the main update function
+---
 function Control.CleanInputs()
     state.inputPressed = { gp = {}, kb = {} }
+end
+
+function Control.SetEngine(newEngine)
+    engine = newEngine
 end
 
 return Control

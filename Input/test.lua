@@ -15,7 +15,9 @@ local love = {
     }
 }
 
-local control = Control{ position = 1, kbSet = presets.kb1, gpSet = presets.gp1, engine = love, player = 1 }
+Control.SetEngine(love)
+
+local control = Control{ position = 1, kbSet = presets.kb1, gpSet = presets.gp1, player = 1 }
 
 control:changeInput('kb', 'buttonA', 's')
 
