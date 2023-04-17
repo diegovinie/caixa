@@ -4,7 +4,8 @@ local presets = require 'caixa.Input.presets'
 ---This the global state, used with static methods
 local state = {
     inputPressed = { gp = {}, kb = {} },
-    controls = {}
+    controls = {},
+    joysticks = {},
 }
 
 local Control = Class{}
@@ -27,7 +28,9 @@ function Control:init(def)
 
     local joysticks = self.engine.joystick.getJoysticks()
 
-    self.joystick = joysticks[self.position]
+    state.joysticks = engine.joystick.getJoysticks()
+
+    self.joystick = state.joysticks[self.position]
     self.inputMap = Control.GenInputMap(kbSet, gpSet)
 
     Control.RegisterControl(self.player, self)
@@ -118,6 +121,19 @@ function Control.UpdateAll(dt)
     end
 end
 
+---Try to get all joysticks from the engine and assign them to the respective players
+---
+---Used when browsers starts the game before registering the joysticks.
+---
+function Control.RegisterJoysticks()
+    print 'Registering joysticks'
+    state.joysticks = self.engine.joystick.getJoysticks()
+
+    for _, control in pairs(state.controls) do
+        control.joystick = state.joysticks[control.position]
+    end
+end
+
 ---Create a InputMap
 ---@generic InputMap : table
 ---@generic Preset : table
@@ -173,6 +189,9 @@ function Control.RegisterGamepad(button, position)
     -- print_r(gp)
     gp[position][button] = true
 
+    if #state.joysticks == 0 then
+        Control.RegisterJoysticks()
+    end
 end
 
 ---Use this with keypressed
